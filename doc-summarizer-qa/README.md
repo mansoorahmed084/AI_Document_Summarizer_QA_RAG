@@ -80,9 +80,17 @@ doc-summarizer-qa/
 │   │       └── documents.py    # Document endpoints
 │   ├── core/
 │   │   └── config.py           # Configuration settings
-│   └── models/
-│       ├── document.py          # Document models
-│       └── ai.py                # AI request/response models
+│   ├── models/
+│   │   ├── document.py          # Document models
+│   │   └── ai.py                # AI request/response models
+│   ├── services/
+│   │   ├── text_extractor.py    # PDF and text extraction
+│   │   └── document_storage.py  # Document storage (in-memory)
+│   └── utils/
+│       └── chunking.py           # Text chunking utilities
+├── docs/
+│   ├── STEP_01_FOUNDATION.md     # Step 1 documentation
+│   └── STEP_02_TEXT_EXTRACTION.md # Step 2 documentation
 ├── requirements.txt
 └── README.md
 ```
@@ -93,9 +101,9 @@ doc-summarizer-qa/
 - `GET /health` - Health check
 
 ### Documents
-- `POST /documents/upload` - Upload a document
-- `GET /documents/{doc_id}` - Get document by ID
-- `GET /documents` - List all documents
+- `POST /documents/upload` - Upload and process a document (extracts text, chunks content)
+- `GET /documents/{doc_id}` - Get document metadata by ID
+- `GET /documents` - List all documents with pagination
 
 ### AI (Coming Soon)
 - `POST /documents/{doc_id}/summarize` - Summarize document
@@ -124,8 +132,8 @@ Client (Android / Web)
 ## 📝 Development Status
 
 - ✅ Step 1: FastAPI skeleton, models, `/health` and `/upload` endpoints
-- ⏳ Step 2: Text extraction (PDF/Text)
-- ⏳ Step 3: Database integration
+- ✅ Step 2: Text extraction (PDF/Text), chunking, and document storage
+- ⏳ Step 3: Database integration (PostgreSQL + Firestore)
 - ⏳ Step 4: Summarization API
 - ⏳ Step 5: Q&A API
 - ⏳ Step 6: Docker + Cloud Run deployment
