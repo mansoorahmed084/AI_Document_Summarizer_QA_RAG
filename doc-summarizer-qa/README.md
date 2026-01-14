@@ -33,12 +33,19 @@ A production-ready backend service that ingests documents (PDF/Text), extracts c
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. **Install dependencies:**
+3. **Upgrade pip, setuptools, and wheel (recommended):**
+   ```bash
+   python -m pip install --upgrade pip setuptools wheel
+   ```
+
+4. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
+   
+   **Note:** If you encounter Rust compilation errors on Windows, ensure you have the latest pip, setuptools, and wheel. The requirements use versions with pre-built wheels to avoid compilation.
 
-4. **Create a `.env` file:**
+5. **Create a `.env` file:**
    ```env
    POSTGRES_HOST=localhost
    POSTGRES_PORT=5432
@@ -50,12 +57,12 @@ A production-ready backend service that ingests documents (PDF/Text), extracts c
    API_KEY=your-api-key
    ```
 
-5. **Run the application:**
+6. **Run the application:**
    ```bash
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-6. **Access the API:**
+7. **Access the API:**
    - Swagger UI: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
    - Health Check: http://localhost:8000/health
