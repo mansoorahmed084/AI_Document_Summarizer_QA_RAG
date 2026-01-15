@@ -80,17 +80,24 @@ doc-summarizer-qa/
 │   │       └── documents.py    # Document endpoints
 │   ├── core/
 │   │   └── config.py           # Configuration settings
+│   ├── db/
+│   │   ├── base.py             # Database connection & session
+│   │   └── models.py            # SQLAlchemy models
 │   ├── models/
-│   │   ├── document.py          # Document models
+│   │   ├── document.py          # Pydantic request/response models
 │   │   └── ai.py                # AI request/response models
 │   ├── services/
 │   │   ├── text_extractor.py    # PDF and text extraction
-│   │   └── document_storage.py  # Document storage (in-memory)
+│   │   ├── document_storage.py  # Document storage (PostgreSQL + Firestore)
+│   │   └── firestore_service.py # Firestore operations
 │   └── utils/
 │       └── chunking.py           # Text chunking utilities
+├── scripts/
+│   └── init_db.py               # Database initialization script
 ├── docs/
 │   ├── STEP_01_FOUNDATION.md     # Step 1 documentation
-│   └── STEP_02_TEXT_EXTRACTION.md # Step 2 documentation
+│   ├── STEP_02_TEXT_EXTRACTION.md # Step 2 documentation
+│   └── STEP_03_DATABASE_INTEGRATION.md # Step 3 documentation
 ├── requirements.txt
 └── README.md
 ```
@@ -133,7 +140,7 @@ Client (Android / Web)
 
 - ✅ Step 1: FastAPI skeleton, models, `/health` and `/upload` endpoints
 - ✅ Step 2: Text extraction (PDF/Text), chunking, and document storage
-- ⏳ Step 3: Database integration (PostgreSQL + Firestore)
+- ✅ Step 3: Database integration (PostgreSQL + Firestore)
 - ⏳ Step 4: Summarization API
 - ⏳ Step 5: Q&A API
 - ⏳ Step 6: Docker + Cloud Run deployment

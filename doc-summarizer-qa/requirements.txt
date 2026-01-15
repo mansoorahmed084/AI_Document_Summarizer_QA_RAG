@@ -7,5 +7,5 @@ PyPDF2==3.0.1
 google-cloud-firestore==2.13.1
 google-cloud-aiplatform==1.38.1
 psycopg2-binary>=2.9.11
-sqlalchemy==2.0.23
+sqlalchemy>=2.0.36
 python-dotenv>=1.0.0

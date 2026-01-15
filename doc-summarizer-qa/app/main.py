@@ -32,8 +32,14 @@ app.include_router(documents.router, prefix="/documents", tags=["Documents"])
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
-    # TODO: Initialize database connections, etc.
-    pass
+    # Initialize database tables
+    from app.db.base import init_db
+    try:
+        init_db()
+        print("✅ Database initialized successfully")
+    except Exception as e:
+        print(f"⚠️  Database initialization warning: {str(e)}")
+        print("   (This is normal if database doesn't exist yet or connection fails)")
 
 
 @app.on_event("shutdown")

@@ -1,8 +1,9 @@
 """
 Document upload and management endpoints.
 """
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends
 from datetime import datetime
+from sqlalchemy.orm import Session
 import uuid
 import os
 
@@ -10,13 +11,17 @@ from app.core.config import settings
 from app.models.document import DocumentUploadResponse, DocumentResponse, DocumentListResponse
 from app.services.text_extractor import TextExtractor
 from app.utils.chunking import TextChunker
-from app.services.document_storage import document_storage
+from app.services.document_storage import DocumentStorage
+from app.db.base import get_db
 
 router = APIRouter()
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     """
     Upload a document (PDF or Text file).
     
@@ -57,8 +62,9 @@ async def upload_document(file: UploadFile = File(...)):
         # Chunk the text for large documents
         chunks = TextChunker.chunk_text(extracted_text)
         
-        # Store document (in-memory for now, Firestore in Step 3)
-        document_storage.store_document(
+        # Store document (PostgreSQL + Firestore)
+        storage = DocumentStorage(db)
+        document = storage.store_document(
             doc_id=doc_id,
             filename=file.filename,
             extracted_text=extracted_text,
@@ -76,7 +82,7 @@ async def upload_document(file: UploadFile = File(...)):
             filename=file.filename,
             status="processed",
             message=status_message,
-            upload_time=datetime.utcnow()
+            upload_time=document["upload_time"]
         )
         
     except HTTPException:
@@ -89,13 +95,17 @@ async def upload_document(file: UploadFile = File(...)):
 
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
-async def get_document(doc_id: str):
+async def get_document(
+    doc_id: str,
+    db: Session = Depends(get_db)
+):
     """
     Get document metadata by ID.
     
     - **doc_id**: Document identifier
     """
-    document = document_storage.get_document(doc_id)
+    storage = DocumentStorage(db)
+    document = storage.get_document(doc_id)
     
     if not document:
         raise HTTPException(
@@ -114,14 +124,19 @@ async def get_document(doc_id: str):
 
 
 @router.get("", response_model=DocumentListResponse)
-async def list_documents(skip: int = 0, limit: int = 100):
+async def list_documents(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
     """
     List all documents with pagination.
     
     - **skip**: Number of documents to skip
     - **limit**: Maximum number of documents to return
     """
-    documents, total = document_storage.list_documents(skip=skip, limit=limit)
+    storage = DocumentStorage(db)
+    documents, total = storage.list_documents(skip=skip, limit=limit)
     
     document_list = [
         DocumentResponse(

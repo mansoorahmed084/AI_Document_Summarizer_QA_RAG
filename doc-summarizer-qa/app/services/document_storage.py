@@ -1,29 +1,36 @@
 """
-In-memory document storage (temporary until Step 3 - Firestore integration).
+Document storage service using PostgreSQL (metadata) and Firestore (content).
 """
-from typing import Dict, Optional
+from typing import Optional, List
 from datetime import datetime
-import uuid
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
+
+from app.db.models import Document, DocumentStatus
+from app.services.firestore_service import firestore_service
 
 
-class InMemoryDocumentStorage:
+class DocumentStorage:
     """
-    Temporary in-memory storage for documents.
-    Will be replaced with Firestore in Step 3.
+    Document storage service.
+    Uses PostgreSQL for metadata and Firestore for content/chunks.
     """
     
-    def __init__(self):
-        """Initialize storage."""
-        self._documents: Dict[str, dict] = {}
-        self._document_texts: Dict[str, str] = {}
-        self._document_chunks: Dict[str, list] = {}
+    def __init__(self, db: Session):
+        """
+        Initialize storage with database session.
+        
+        Args:
+            db: SQLAlchemy database session
+        """
+        self.db = db
     
     def store_document(
         self,
         doc_id: str,
         filename: str,
         extracted_text: str,
-        chunks: list,
+        chunks: List[str],
         file_size: int
     ) -> dict:
         """
@@ -37,24 +44,44 @@ class InMemoryDocumentStorage:
             file_size: File size in bytes
             
         Returns:
-            Document metadata
+            Document metadata dictionary
         """
-        document = {
-            "id": doc_id,
-            "filename": filename,
-            "upload_time": datetime.utcnow(),
-            "status": "processed",
-            "file_size": file_size,
-            "text_length": len(extracted_text),
-            "chunk_count": len(chunks),
-            "summary": None,
-        }
+        # Store metadata in PostgreSQL
+        document = Document(
+            id=doc_id,
+            filename=filename,
+            upload_time=datetime.utcnow(),
+            status=DocumentStatus.PROCESSED,
+            file_size=file_size,
+            text_length=len(extracted_text),
+            chunk_count=len(chunks),
+            summary=None,
+        )
         
-        self._documents[doc_id] = document
-        self._document_texts[doc_id] = extracted_text
-        self._document_chunks[doc_id] = chunks
+        self.db.add(document)
+        self.db.commit()
+        self.db.refresh(document)
         
-        return document
+        # Store content in Firestore (or fallback to in-memory if unavailable)
+        firestore_success = firestore_service.store_document_content(
+            doc_id=doc_id,
+            extracted_text=extracted_text,
+            chunks=chunks
+        )
+        
+        # If Firestore fails, store in a temporary in-memory cache as fallback
+        # This allows the app to work without Firestore for local development
+        if not firestore_success:
+            # Store in a simple in-memory cache as fallback
+            # Note: This is temporary and will be lost on restart
+            if not hasattr(firestore_service, '_fallback_cache'):
+                firestore_service._fallback_cache = {}
+            firestore_service._fallback_cache[doc_id] = {
+                "text": extracted_text,
+                "chunks": chunks
+            }
+        
+        return document.to_dict()
     
     def get_document(self, doc_id: str) -> Optional[dict]:
         """
@@ -64,13 +91,17 @@ class InMemoryDocumentStorage:
             doc_id: Document ID
             
         Returns:
-            Document metadata or None
+            Document metadata dictionary or None
         """
-        return self._documents.get(doc_id)
+        document = self.db.query(Document).filter(Document.id == doc_id).first()
+        
+        if document:
+            return document.to_dict()
+        return None
     
     def get_document_text(self, doc_id: str) -> Optional[str]:
         """
-        Get document text content.
+        Get document text content from Firestore.
         
         Args:
             doc_id: Document ID
@@ -78,11 +109,11 @@ class InMemoryDocumentStorage:
         Returns:
             Document text or None
         """
-        return self._document_texts.get(doc_id)
+        return firestore_service.get_document_text(doc_id)
     
-    def get_document_chunks(self, doc_id: str) -> Optional[list]:
+    def get_document_chunks(self, doc_id: str) -> Optional[List[str]]:
         """
-        Get document chunks.
+        Get document chunks from Firestore.
         
         Args:
             doc_id: Document ID
@@ -90,9 +121,9 @@ class InMemoryDocumentStorage:
         Returns:
             List of chunks or None
         """
-        return self._document_chunks.get(doc_id)
+        return firestore_service.get_document_chunks(doc_id)
     
-    def list_documents(self, skip: int = 0, limit: int = 100) -> tuple[list, int]:
+    def list_documents(self, skip: int = 0, limit: int = 100) -> tuple[List[dict], int]:
         """
         List documents with pagination.
         
@@ -103,16 +134,19 @@ class InMemoryDocumentStorage:
         Returns:
             Tuple of (document list, total count)
         """
-        all_docs = list(self._documents.values())
-        total = len(all_docs)
+        # Get total count
+        total = self.db.query(Document).count()
         
-        # Sort by upload_time descending
-        all_docs.sort(key=lambda x: x["upload_time"], reverse=True)
+        # Get paginated documents, ordered by upload_time descending
+        documents = (
+            self.db.query(Document)
+            .order_by(desc(Document.upload_time))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
         
-        # Apply pagination
-        paginated_docs = all_docs[skip:skip + limit]
-        
-        return paginated_docs, total
+        return [doc.to_dict() for doc in documents], total
     
     def update_document_summary(self, doc_id: str, summary: str) -> bool:
         """
@@ -125,11 +159,33 @@ class InMemoryDocumentStorage:
         Returns:
             True if updated, False if document not found
         """
-        if doc_id in self._documents:
-            self._documents[doc_id]["summary"] = summary
+        document = self.db.query(Document).filter(Document.id == doc_id).first()
+        
+        if document:
+            document.summary = summary
+            self.db.commit()
             return True
         return False
-
-
-# Global instance (will be replaced with Firestore client in Step 3)
-document_storage = InMemoryDocumentStorage()
+    
+    def delete_document(self, doc_id: str) -> bool:
+        """
+        Delete document (metadata and content).
+        
+        Args:
+            doc_id: Document ID
+            
+        Returns:
+            True if deleted, False if document not found
+        """
+        document = self.db.query(Document).filter(Document.id == doc_id).first()
+        
+        if document:
+            # Delete from PostgreSQL
+            self.db.delete(document)
+            self.db.commit()
+            
+            # Delete from Firestore
+            firestore_service.delete_document_content(doc_id)
+            
+            return True
+        return False
