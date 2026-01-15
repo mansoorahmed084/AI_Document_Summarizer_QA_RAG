@@ -4,7 +4,7 @@ Main FastAPI application entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import health, documents
+from app.api.v1 import health, documents, ai
 from app.core.config import settings
 
 app = FastAPI(
@@ -27,6 +27,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, tags=["System"])
 app.include_router(documents.router, prefix="/documents", tags=["Documents"])
+app.include_router(ai.router, tags=["AI"])
 
 
 @app.on_event("startup")

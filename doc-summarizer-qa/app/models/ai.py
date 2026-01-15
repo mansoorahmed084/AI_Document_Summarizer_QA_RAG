@@ -6,8 +6,7 @@ from typing import Optional
 
 
 class SummarizeRequest(BaseModel):
-    """Request model for document summarization."""
-    doc_id: str = Field(..., description="Document ID to summarize")
+    """Request model for document summarization (optional, for future use)."""
     max_length: Optional[int] = Field(500, description="Maximum summary length in words")
 
 

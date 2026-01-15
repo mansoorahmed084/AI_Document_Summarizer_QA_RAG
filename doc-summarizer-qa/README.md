@@ -89,7 +89,8 @@ doc-summarizer-qa/
 │   ├── services/
 │   │   ├── text_extractor.py    # PDF and text extraction
 │   │   ├── document_storage.py  # Document storage (PostgreSQL + Firestore)
-│   │   └── firestore_service.py # Firestore operations
+│   │   ├── firestore_service.py # Firestore operations
+│   │   └── vertex_ai_service.py # Vertex AI for summarization & Q&A
 │   └── utils/
 │       └── chunking.py           # Text chunking utilities
 ├── scripts/
@@ -97,7 +98,8 @@ doc-summarizer-qa/
 ├── docs/
 │   ├── STEP_01_FOUNDATION.md     # Step 1 documentation
 │   ├── STEP_02_TEXT_EXTRACTION.md # Step 2 documentation
-│   └── STEP_03_DATABASE_INTEGRATION.md # Step 3 documentation
+│   ├── STEP_03_DATABASE_INTEGRATION.md # Step 3 documentation
+│   └── STEP_04_SUMMARIZATION_API.md # Step 4 documentation
 ├── requirements.txt
 └── README.md
 ```
@@ -112,9 +114,9 @@ doc-summarizer-qa/
 - `GET /documents/{doc_id}` - Get document metadata by ID
 - `GET /documents` - List all documents with pagination
 
-### AI (Coming Soon)
-- `POST /documents/{doc_id}/summarize` - Summarize document
-- `POST /documents/{doc_id}/qa` - Ask questions about document
+### AI
+- `POST /documents/{doc_id}/summarize` - Summarize document using Vertex AI
+- `POST /documents/{doc_id}/qa` - Ask questions about document (RAG-lite)
 
 ## 🏗️ Architecture
 
@@ -141,7 +143,7 @@ Client (Android / Web)
 - ✅ Step 1: FastAPI skeleton, models, `/health` and `/upload` endpoints
 - ✅ Step 2: Text extraction (PDF/Text), chunking, and document storage
 - ✅ Step 3: Database integration (PostgreSQL + Firestore)
-- ⏳ Step 4: Summarization API
+- ✅ Step 4: Summarization API (Vertex AI integration)
 - ⏳ Step 5: Q&A API
 - ⏳ Step 6: Docker + Cloud Run deployment
 - ⏳ Step 7: Logging + polish
