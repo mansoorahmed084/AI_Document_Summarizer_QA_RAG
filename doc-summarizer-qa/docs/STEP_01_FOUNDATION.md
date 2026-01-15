@@ -40,6 +40,7 @@ app/
 - **Separation of Concerns**: API routes, business logic, and models are separated
 - **Versioning**: `/v1/` allows for future API versions without breaking changes
 - **Scalability**: Easy to add new modules (services, utils, etc.)
+- **Why pydantic**: Pydantic is used to define data models with validation using Python type hints. It ensures incoming data is correct, automatically converts types when possible, and integrates deeply with FastAPI to provide request validation and API documentation with minimal code.
 
 ### 2. Configuration Management
 
