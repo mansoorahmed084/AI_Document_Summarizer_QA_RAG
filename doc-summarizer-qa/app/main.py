@@ -33,6 +33,32 @@ app.include_router(ai.router, tags=["AI"])
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup."""
+    import os
+    from app.core.config import settings
+    
+    # Set GOOGLE_APPLICATION_CREDENTIALS from .env if present
+    # This MUST happen before any Google Cloud services are initialized
+    if settings.GOOGLE_APPLICATION_CREDENTIALS:
+        creds_path = settings.GOOGLE_APPLICATION_CREDENTIALS
+        # Verify the file exists
+        if os.path.exists(creds_path):
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
+            print(f"✅ Set GOOGLE_APPLICATION_CREDENTIALS: {creds_path}")
+        else:
+            print(f"⚠️  Warning: Credentials file not found: {creds_path}")
+            print("   GCP services will use default credentials or fail gracefully")
+    
+    # Pre-initialize services now that credentials are set
+    # This ensures they're ready when first used
+    from app.services.firestore_service import get_firestore_service
+    from app.services.vertex_ai_service import get_vertex_ai_service
+    
+    # Initialize Firestore (will use credentials if set)
+    get_firestore_service()
+    
+    # Initialize Vertex AI (will use credentials if set)
+    get_vertex_ai_service()
+    
     # Initialize database tables
     from app.db.base import init_db
     try:

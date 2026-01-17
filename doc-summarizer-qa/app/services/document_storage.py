@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from app.db.models import Document, DocumentStatus
-from app.services.firestore_service import firestore_service
+from app.services.firestore_service import get_firestore_service
 
 
 class DocumentStorage:
@@ -63,6 +63,7 @@ class DocumentStorage:
         self.db.refresh(document)
         
         # Store content in Firestore (or fallback to in-memory if unavailable)
+        firestore_service = get_firestore_service()
         firestore_success = firestore_service.store_document_content(
             doc_id=doc_id,
             extracted_text=extracted_text,
@@ -109,7 +110,7 @@ class DocumentStorage:
         Returns:
             Document text or None
         """
-        return firestore_service.get_document_text(doc_id)
+        return get_firestore_service().get_document_text(doc_id)
     
     def get_document_chunks(self, doc_id: str) -> Optional[List[str]]:
         """
@@ -121,7 +122,7 @@ class DocumentStorage:
         Returns:
             List of chunks or None
         """
-        return firestore_service.get_document_chunks(doc_id)
+        return get_firestore_service().get_document_chunks(doc_id)
     
     def list_documents(self, skip: int = 0, limit: int = 100) -> tuple[List[dict], int]:
         """
@@ -185,7 +186,7 @@ class DocumentStorage:
             self.db.commit()
             
             # Delete from Firestore
-            firestore_service.delete_document_content(doc_id)
+            get_firestore_service().delete_document_content(doc_id)
             
             return True
         return False

@@ -7,7 +7,7 @@ import time
 
 from app.models.ai import SummarizeRequest, SummarizeResponse, QARequest, QAResponse
 from app.services.document_storage import DocumentStorage
-from app.services.vertex_ai_service import vertex_ai_service
+from app.services.vertex_ai_service import get_vertex_ai_service
 from app.db.base import get_db
 from app.db.models import Request, RequestType
 
@@ -62,6 +62,7 @@ async def summarize_document(
         )
     
     # Check if Vertex AI is available
+    vertex_ai_service = get_vertex_ai_service()
     if not vertex_ai_service.initialized:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -150,6 +151,7 @@ async def ask_question(
         )
     
     # Check if Vertex AI is available
+    vertex_ai_service = get_vertex_ai_service()
     if not vertex_ai_service.initialized:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

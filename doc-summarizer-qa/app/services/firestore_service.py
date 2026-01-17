@@ -26,11 +26,35 @@ class FirestoreService:
         
         if settings.GCP_PROJECT_ID and FIRESTORE_AVAILABLE:
             try:
+                # Firestore client will automatically use GOOGLE_APPLICATION_CREDENTIALS from environment
+                # Verify credentials file exists and is valid before initializing
+                import os
+                creds_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                if creds_path and os.path.exists(creds_path):
+                    # Verify it's valid JSON
+                    try:
+                        import json
+                        with open(creds_path, 'r') as f:
+                            json.load(f)  # Validate JSON
+                    except json.JSONDecodeError:
+                        print(f"Warning: Credentials file is not valid JSON: {creds_path}")
+                        print("   Using in-memory fallback for content storage.")
+                        return
+                
                 self.db = firestore.Client(project=settings.GCP_PROJECT_ID)
                 print("✅ Firestore client initialized")
             except Exception as e:
-                print(f"Warning: Failed to initialize Firestore: {str(e)}")
-                print("   Using in-memory fallback for content storage.")
+                error_details = str(e)
+                # Provide more helpful error message
+                if "'str' object has no attribute 'get'" in error_details:
+                    print(f"Warning: Failed to initialize Firestore: Credentials parsing issue")
+                    print(f"   Error: {error_details}")
+                    print("   This usually means the credentials file format is incorrect")
+                    print("   Check that GOOGLE_APPLICATION_CREDENTIALS points to a valid service account JSON file")
+                    print("   Using in-memory fallback for content storage.")
+                else:
+                    print(f"Warning: Failed to initialize Firestore: {error_details}")
+                    print("   Using in-memory fallback for content storage.")
         else:
             if not FIRESTORE_AVAILABLE:
                 print("Warning: Firestore library not installed. Using in-memory fallback for content.")
@@ -149,5 +173,12 @@ class FirestoreService:
             return False
 
 
-# Global instance
-firestore_service = FirestoreService()
+# Global instance (will be initialized on startup)
+firestore_service = None
+
+def get_firestore_service() -> FirestoreService:
+    """Get or create Firestore service instance."""
+    global firestore_service
+    if firestore_service is None:
+        firestore_service = FirestoreService()
+    return firestore_service

@@ -36,6 +36,12 @@ env/
 .env
 .env.local
 
+# GCP credentials
+*.json
+!package.json
+gcp-key.json
+service-account*.json
+
 # OS
 .DS_Store
 Thumbs.db

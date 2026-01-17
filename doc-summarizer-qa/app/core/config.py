@@ -44,9 +44,14 @@ class Settings(BaseSettings):
     # Security
     API_KEY: str = ""
     
+    # GCP Credentials (optional - Google libraries read this from environment)
+    GOOGLE_APPLICATION_CREDENTIALS: str = ""
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        # Allow extra fields to be ignored (for environment variables we don't use in code)
+        extra = "ignore"
 
 
 settings = Settings()

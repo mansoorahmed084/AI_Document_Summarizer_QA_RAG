@@ -8,11 +8,21 @@ from app.core.config import settings
 # Try to import Vertex AI, but allow graceful degradation
 try:
     import vertexai
-    from vertexai.generative_models import GenerativeModel
+    # Try preview import first (newer API)
+    try:
+        from vertexai.preview.generative_models import GenerativeModel
+    except ImportError:
+        # Fallback to standard import if preview doesn't work
+        from vertexai.generative_models import GenerativeModel
     VERTEX_AI_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     VERTEX_AI_AVAILABLE = False
-    print("Warning: google-cloud-aiplatform not available. AI features will be disabled.")
+    print(f"Warning: google-cloud-aiplatform not available: {str(e)}")
+    print("   AI features will be disabled.")
+except Exception as e:
+    VERTEX_AI_AVAILABLE = False
+    print(f"Warning: Error importing Vertex AI: {str(e)}")
+    print("   AI features will be disabled.")
 
 
 class VertexAIService:
@@ -32,12 +42,18 @@ class VertexAIService:
             return
         
         try:
+            # Vertex AI will automatically use GOOGLE_APPLICATION_CREDENTIALS from environment
             vertexai.init(project=settings.GCP_PROJECT_ID, location=settings.GCP_REGION)
             self.model = GenerativeModel(settings.VERTEX_AI_MODEL)
             self.initialized = True
             print(f"✅ Vertex AI initialized with model: {settings.VERTEX_AI_MODEL}")
         except Exception as e:
-            print(f"Warning: Failed to initialize Vertex AI: {str(e)}")
+            error_msg = str(e)
+            print(f"Warning: Failed to initialize Vertex AI: {error_msg}")
+            if "credentials" in error_msg.lower() or "authentication" in error_msg.lower():
+                print("   Check that GOOGLE_APPLICATION_CREDENTIALS points to a valid JSON file")
+            elif "project" in error_msg.lower():
+                print("   Check that GCP_PROJECT_ID is correct and you have access")
             print("   AI features will be disabled.")
     
     def summarize_text(
@@ -152,5 +168,12 @@ Answer:"""
         return prompt
 
 
-# Global instance
-vertex_ai_service = VertexAIService()
+# Global instance (will be initialized on startup)
+vertex_ai_service = None
+
+def get_vertex_ai_service() -> VertexAIService:
+    """Get or create Vertex AI service instance."""
+    global vertex_ai_service
+    if vertex_ai_service is None:
+        vertex_ai_service = VertexAIService()
+    return vertex_ai_service
