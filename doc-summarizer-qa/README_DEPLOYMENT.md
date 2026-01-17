@@ -18,6 +18,16 @@ gcloud services enable containerregistry.googleapis.com
 gcloud services enable sqladmin.googleapis.com  # If using Cloud SQL
 ```
 
+### 1.5. Set Up Permissions (If You Get Permission Errors)
+
+If you encounter permission errors, run:
+
+```bash
+python scripts/setup_permissions.py
+```
+
+This will grant the necessary IAM roles to your account.
+
 ### 2. Authenticate
 
 ```bash

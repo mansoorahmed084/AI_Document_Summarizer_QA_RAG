@@ -161,8 +161,10 @@ Client (Android / Web)
 - ✅ Step 3: Database integration (PostgreSQL + Firestore)
 - ✅ Step 4: Summarization API (Vertex AI integration) - **TESTED & WORKING**
 - ✅ Step 5: Q&A API (RAG-lite implementation) - **COMPLETE**
-- ✅ Step 6: Docker + Cloud Run deployment - **COMPLETE**
+- ✅ Step 6: Docker + Cloud Run deployment - **DEPLOYED & RUNNING** 🚀
 - ⏳ Step 7: Logging + polish
+
+**🌐 Live Service:** https://doc-summarizer-qa-1008530136324.us-central1.run.app
 
 **See `docs/ROADMAP_REMAINING_STEPS.md` for detailed next steps.**
 

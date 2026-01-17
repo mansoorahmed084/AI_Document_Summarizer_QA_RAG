@@ -1,76 +1,72 @@
 """
 Main FastAPI application entry point.
 """
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.api.v1 import health, documents, ai
-from app.core.config import settings
 import os
+import sys
 
-app = FastAPI(
-    title="AI Document Summarizer & Q&A API",
-    description="Production-ready backend for document processing, summarization, and Q&A",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+# Print startup message immediately
+print("=" * 60)
+print("🚀 Starting FastAPI application...")
+print("=" * 60)
 
-# Cloud Run sets PORT environment variable
-PORT = int(os.environ.get("PORT", 8080))
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include routers
-app.include_router(health.router, tags=["System"])
-app.include_router(documents.router, prefix="/documents", tags=["Documents"])
-app.include_router(ai.router, tags=["AI"])
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services on startup."""
-    import os
+try:
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    
+    print("✅ FastAPI imported")
+    
+    from app.api.v1 import health
+    print("✅ Health router imported")
+    
     from app.core.config import settings
+    print("✅ Settings loaded")
     
-    # Set GOOGLE_APPLICATION_CREDENTIALS from .env if present
-    # This MUST happen before any Google Cloud services are initialized
-    if settings.GOOGLE_APPLICATION_CREDENTIALS:
-        creds_path = settings.GOOGLE_APPLICATION_CREDENTIALS
-        # Verify the file exists
-        if os.path.exists(creds_path):
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = creds_path
-            print(f"✅ Set GOOGLE_APPLICATION_CREDENTIALS: {creds_path}")
-        else:
-            print(f"⚠️  Warning: Credentials file not found: {creds_path}")
-            print("   GCP services will use default credentials or fail gracefully")
+    app = FastAPI(
+        title="AI Document Summarizer & Q&A API",
+        description="Production-ready backend for document processing, summarization, and Q&A",
+        version="1.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
     
-    # Pre-initialize services now that credentials are set
-    # This ensures they're ready when first used
-    from app.services.firestore_service import get_firestore_service
-    from app.services.vertex_ai_service import get_vertex_ai_service
+    # Cloud Run sets PORT environment variable
+    PORT = int(os.environ.get("PORT", 8080))
+    print(f"✅ Port configured: {PORT}")
     
-    # Initialize Firestore (will use credentials if set)
-    get_firestore_service()
+    # CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    print("✅ CORS middleware configured")
     
-    # Initialize Vertex AI (will use credentials if set)
-    get_vertex_ai_service()
+    # Include routers (lazy import to avoid blocking)
+    app.include_router(health.router, tags=["System"])
+    print("✅ Health router included")
     
-    # Initialize database tables
-    from app.db.base import init_db
+    # Import and include other routers
     try:
-        init_db()
-        print("✅ Database initialized successfully")
+        from app.api.v1 import documents, ai
+        app.include_router(documents.router, prefix="/documents", tags=["Documents"])
+        app.include_router(ai.router, tags=["AI"])
+        print("✅ All routers included")
     except Exception as e:
-        print(f"⚠️  Database initialization warning: {str(e)}")
-        print("   (This is normal if database doesn't exist yet or connection fails)")
+        print(f"⚠️  Warning: Some routers failed to load: {e}")
+        print("   Health endpoint will still work")
+    
+    print("=" * 60)
+    print("✅ Application initialized successfully!")
+    print(f"🌐 Server ready on port {PORT}")
+    print("=" * 60)
+    
+except Exception as e:
+    print(f"❌ Fatal error during app initialization: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 
 @app.on_event("shutdown")

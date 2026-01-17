@@ -4,7 +4,9 @@
 
 Step 6 containerizes the application using Docker and deploys it to Google Cloud Run, making it production-ready and accessible on the internet.
 
-**Status:** ✅ **COMPLETED**
+**Status:** ✅ **DEPLOYED & RUNNING**
+
+**🌐 Service URL:** https://doc-summarizer-qa-1008530136324.us-central1.run.app
 
 ---
 
@@ -425,6 +427,38 @@ gcloud auth configure-docker
 
 # Set project
 gcloud config set project YOUR_PROJECT_ID
+```
+
+### Step 1.5: Set Up Permissions (If Needed)
+
+If you get permission errors, run the setup script:
+
+```bash
+python scripts/setup_permissions.py
+```
+
+Or manually grant permissions:
+
+```bash
+PROJECT_ID=$(gcloud config get-value project)
+USER_EMAIL=$(gcloud config get-value account)
+
+# Grant required roles
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member=user:$USER_EMAIL \
+  --role=roles/cloudbuild.builds.editor
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member=user:$USER_EMAIL \
+  --role=roles/run.admin
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member=user:$USER_EMAIL \
+  --role=roles/iam.serviceAccountUser
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member=user:$USER_EMAIL \
+  --role=roles/storage.admin
 ```
 
 ### Step 2: Enable APIs

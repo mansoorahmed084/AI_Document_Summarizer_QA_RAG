@@ -25,11 +25,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Copy Python dependencies from builder to a location accessible by all users
+COPY --from=builder /root/.local /usr/local
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Make sure scripts are usable
+ENV PATH=/usr/local/bin:$PATH
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
@@ -48,4 +48,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run the application
 # Cloud Run sets PORT environment variable, default to 8080
-CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+# Use --log-level info to see startup messages and errors
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --log-level info
