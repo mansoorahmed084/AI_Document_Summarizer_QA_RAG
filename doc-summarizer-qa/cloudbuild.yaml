@@ -1,0 +1,53 @@
+# Cloud Build configuration for Cloud Run deployment
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:latest'
+      - '.'
+    id: 'build-image'
+
+  # Push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:$SHORT_SHA'
+    id: 'push-image'
+
+  # Push latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:latest'
+    id: 'push-latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'doc-summarizer-qa'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      # Environment variables will be set via Cloud Run console or gcloud
+    id: 'deploy-cloud-run'
+
+images:
+  - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/doc-summarizer-qa:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1200s'

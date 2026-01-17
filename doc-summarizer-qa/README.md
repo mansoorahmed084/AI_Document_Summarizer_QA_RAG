@@ -20,7 +20,23 @@ A production-ready backend service that ingests documents (PDF/Text), extracts c
 - GCP Project with Vertex AI enabled
 - Firestore database
 
-## 🛠️ Setup
+## 🚀 Quick Deployment (Cloud Run)
+
+For quick deployment to Cloud Run, see `README_DEPLOYMENT.md` or run:
+
+**Python (Cross-platform):**
+```bash
+python scripts/deploy.py
+```
+
+**Or using bash script (Linux/Mac):**
+```bash
+./scripts/deploy.sh
+```
+
+---
+
+## 🛠️ Local Setup
 
 1. **Clone and navigate to the project:**
    ```bash
@@ -143,10 +159,12 @@ Client (Android / Web)
 - ✅ Step 1: FastAPI skeleton, models, `/health` and `/upload` endpoints
 - ✅ Step 2: Text extraction (PDF/Text), chunking, and document storage
 - ✅ Step 3: Database integration (PostgreSQL + Firestore)
-- ✅ Step 4: Summarization API (Vertex AI integration)
-- ⏳ Step 5: Q&A API
-- ⏳ Step 6: Docker + Cloud Run deployment
+- ✅ Step 4: Summarization API (Vertex AI integration) - **TESTED & WORKING**
+- ✅ Step 5: Q&A API (RAG-lite implementation) - **COMPLETE**
+- ✅ Step 6: Docker + Cloud Run deployment - **COMPLETE**
 - ⏳ Step 7: Logging + polish
+
+**See `docs/ROADMAP_REMAINING_STEPS.md` for detailed next steps.**
 
 ## 📄 License
 

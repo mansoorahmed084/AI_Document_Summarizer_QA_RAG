@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import health, documents, ai
 from app.core.config import settings
+import os
 
 app = FastAPI(
     title="AI Document Summarizer & Q&A API",
@@ -14,6 +15,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Cloud Run sets PORT environment variable
+PORT = int(os.environ.get("PORT", 8080))
 
 # CORS middleware
 app.add_middleware(
