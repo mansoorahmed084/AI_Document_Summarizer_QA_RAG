@@ -23,8 +23,11 @@ else:
     # No database configured - create a dummy engine that will fail gracefully
     engine = None
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Create session factory only if engine exists
+if engine:
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+else:
+    SessionLocal = None
 
 # Base class for models
 Base = declarative_base()
@@ -35,6 +38,12 @@ def get_db():
     Dependency function to get database session.
     Use this in FastAPI route dependencies.
     """
+    if not SessionLocal:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database not configured. Please set DATABASE_URL environment variable in Cloud Run. See docs/DATABASE_SETUP_CLOUD_RUN.md"
+        )
     db = SessionLocal()
     try:
         yield db
@@ -48,7 +57,13 @@ def init_db():
     Call this on application startup.
     Does not raise exceptions - fails gracefully if database is unavailable.
     """
+    if engine is None:
+        print("⚠️  Database not configured (DATABASE_URL is empty). Skipping initialization.")
+        return False
     try:
+        # Import models to ensure they're registered with Base.metadata
+        from app.db import models  # noqa: F401
+        
         # Test connection first with timeout
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))

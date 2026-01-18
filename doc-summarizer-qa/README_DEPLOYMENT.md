@@ -90,6 +90,18 @@ docker run -p 8080:8080 \
 curl http://localhost:8080/health
 ```
 
+## Database Setup
+
+After deployment, set up Cloud SQL:
+
+```bash
+python scripts/setup_cloud_sql.py
+```
+
+This will configure PostgreSQL for your Cloud Run service.
+
+See `docs/DATABASE_SETUP_CLOUD_RUN.md` for detailed instructions.
+
 ## Troubleshooting
 
 See `docs/STEP_06_DEPLOYMENT.md` for detailed troubleshooting guide.
