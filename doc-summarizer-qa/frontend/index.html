@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Summarizer & Q&A</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Document Summarizer & Q&A</h1>
+            <p class="subtitle">Upload documents, get AI-powered summaries, and ask questions</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <h2>Choose Files</h2>
+                    <p class="upload-hint">or drop files here</p>
+                    <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx" multiple hidden>
+                    <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Select Files
+                    </button>
+                    <p class="supported-formats">Supported: PDF, TXT, DOC, DOCX</p>
+                </div>
+            </section>
+
+            <!-- Processing Status -->
+            <section class="status-section" id="statusSection" style="display: none;">
+                <div class="status-card">
+                    <div class="spinner"></div>
+                    <p id="statusMessage">Processing document...</p>
+                </div>
+            </section>
+
+            <!-- Documents List -->
+            <section class="documents-section" id="documentsSection" style="display: none;">
+                <h2>Your Documents</h2>
+                <div class="documents-list" id="documentsList"></div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="summary-section" id="summarySection" style="display: none;">
+                <div class="section-header">
+                    <h2>📝 Document Summary</h2>
+                    <button class="btn-secondary" id="refreshSummaryBtn">Refresh</button>
+                </div>
+                <div class="summary-content" id="summaryContent">
+                    <div class="loading">Generating summary...</div>
+                </div>
+            </section>
+
+            <!-- Q&A Section -->
+            <section class="qa-section" id="qaSection" style="display: none;">
+                <div class="section-header">
+                    <h2>💬 Ask Questions</h2>
+                </div>
+                <div class="qa-container">
+                    <div class="question-input-area">
+                        <textarea 
+                            id="questionInput" 
+                            placeholder="Ask a question about the document..."
+                            rows="3"
+                        ></textarea>
+                        <button class="btn-primary" id="askQuestionBtn">Ask</button>
+                    </div>
+                    <div class="suggested-questions" id="suggestedQuestions">
+                        <p class="suggested-label">Suggested questions:</p>
+                        <div class="question-chips">
+                            <button class="chip" data-question="What is the main topic of this document?">Main topic?</button>
+                            <button class="chip" data-question="What are the key findings?">Key findings?</button>
+                            <button class="chip" data-question="What is the conclusion?">Conclusion?</button>
+                        </div>
+                    </div>
+                    <div class="answers-container" id="answersContainer"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Vertex AI (Gemini) | FastAPI Backend</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

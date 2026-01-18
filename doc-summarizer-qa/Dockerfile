@@ -35,7 +35,7 @@ ENV PATH=/usr/local/bin:$PATH
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Copy application code
+# Copy application code (including frontend)
 COPY --chown=appuser:appuser . .
 
 # Expose port (Cloud Run uses PORT env var, default to 8080)
